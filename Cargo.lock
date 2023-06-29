@@ -1444,6 +1444,7 @@ dependencies = [
  "actix-web",
  "dotenv",
  "sea-orm",
+ "serde",
 ]
 
 [[package]]
