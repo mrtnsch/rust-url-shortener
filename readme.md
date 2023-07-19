@@ -49,11 +49,12 @@ async fn shorten_url(params: web::Query<UrlParameters>) -> impl Responder {
 * introduce persistence in db
 * add seaorm
 * `sea-orm = { version = "^0", features = [ <sqlx-postgres>, <runtime-actix-native-tls>, "macros" ] }`
-* generate migrations
+* prepare for running migrations
 `cargo install sea-orm-cli`
 `sea-orm-cli migrate init`
 * Reorganize tomls as described in https://www.sea-ql.org/SeaORM/docs/migration/setting-up-migration/
-* 
+* write the actual migrations
+* `sea-orm-cli migrate generate create_url_map_table`
 
 * replace in-memory map with migrations
 
