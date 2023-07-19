@@ -54,7 +54,12 @@ async fn shorten_url(params: web::Query<UrlParameters>) -> impl Responder {
 `sea-orm-cli migrate init`
 * Reorganize tomls as described in https://www.sea-ql.org/SeaORM/docs/migration/setting-up-migration/
 * write the actual migrations
-* `sea-orm-cli migrate generate create_url_map_table`
+* `sea-orm-cli migrate generate create_url_map_table` to create an empty migration to start off with
+* Write seaorm ddl
+* Run server, verify the migration was run
+
+### Generating the entities
+
 
 * replace in-memory map with migrations
 
