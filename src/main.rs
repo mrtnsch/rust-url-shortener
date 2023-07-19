@@ -7,7 +7,7 @@ use uuid::Uuid;
 use dotenv::dotenv;
 use std::env;
 use std::time::Duration;
-use sea_orm::{ActiveModelTrait, ConnectOptions, Database, DatabaseConnection};
+use sea_orm::{ActiveModelTrait, ColumnTrait, ConnectOptions, Database, DatabaseConnection, EntityTrait, QueryFilter};
 use migration::{Migrator, MigratorTrait};
 
 use entity::url_store;
@@ -30,16 +30,18 @@ async fn shorten_url(body: web::Form<UrlInfoBody>, app_state: web::Data<AppState
     let shortened_url: String = Uuid::new_v4().to_string().chars().take(8).collect();
     let target_url = &body.original_url;
 
+    //Create the entity
     let url_entry = url_store::ActiveModel {
         target_url: Set(target_url.clone()),
         short_url: Set(shortened_url.clone()),
         ..Default::default()
     };
-
+    //Insert entity to db
     let _url_entry = url_entry.insert(&app_state.db).await;
 
-    let mut url_map = app_state.url_map.lock().unwrap();
-    url_map.insert(shortened_url.to_string(), body.original_url.to_owned());
+    //old implementation using the in-memory hashmap
+    //let mut url_map = app_state.url_map.lock().unwrap();
+    //url_map.insert(shortened_url.to_string(), body.original_url.to_owned());
 
     let response_body = format!("Your shortened URL is: http://{}/{}", &app_state.server, shortened_url);
     HttpResponse::Ok().body(response_body)
@@ -47,15 +49,28 @@ async fn shorten_url(body: web::Form<UrlInfoBody>, app_state: web::Data<AppState
 
 #[get("/{shorturl}")]
 async fn resolve_shortened_url(short_url: web::Path<String>, app_state: web::Data<AppState>) -> impl Responder {
-    let url_map = app_state.url_map.lock().unwrap();
-    let result = url_map.get(&short_url.into_inner());
+    let url_entry = url_store::Entity::find()
+        .filter(url_store::Column::ShortUrl.eq(short_url.clone()))
+        .one(&app_state.db)
+        .await.expect("Error while retrieving stored value from db");
 
-    match result {
+    match url_entry {
         Some(target_url) => HttpResponse::TemporaryRedirect()
-            .insert_header(("Location", target_url.to_string()))
+            .insert_header(("Location", target_url.target_url))
             .finish(),
         None => HttpResponse::NotFound().body("URL not found"),
     }
+    //old implementation using the in-memory hashmap:
+    //
+    //let url_map = app_state.url_map.lock().unwrap();
+    //let result = url_map.get(&short_url.clone());
+    //
+    // match result {
+    //     Some(target_url) => HttpResponse::TemporaryRedirect()
+    //         .insert_header(("Location", target_url.to_string()))
+    //         .finish(),
+    //     None => HttpResponse::NotFound().body("URL not found"),
+    // }
 
 }
 
