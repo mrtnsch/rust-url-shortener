@@ -1,3 +1,6 @@
 target
 .env
 .idea
+docker-compose.yml
+readme.md
+migration/target

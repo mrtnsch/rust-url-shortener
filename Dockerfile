@@ -1,21 +1,31 @@
 # Use the official Rust image as the base image
 FROM rust:1.67 as builder
 
-RUN USER=root cargo new --bin rust-url-shortener
-WORKDIR ./rust-url-shortener
-COPY ./Cargo.toml Cargo.lock ./
+WORKDIR /app
+# Copy cargo files to container
+COPY Cargo.toml Cargo.lock ./
+# Copy entity and migration files into container to they can be built and cached
+COPY entity ./entity
+COPY migration ./migration
+
+# Create fake main.rs file in src and build
+RUN mkdir ./src && echo 'fn main() { println!("Dummy!"); }' > ./src/main.rs
 RUN cargo build --release
-RUN rm src/*.rs
 
-# Copy the application source code to the container
-ADD src ./src
+# Copy real src files over
+RUN rm -rf ./src
+COPY ./src ./src
 
-# Build the application
-RUN rm ./target/release/deps/rust_url_shortener*
+# The last modified attribute of main.rs needs to be updated manually,
+# otherwise cargo won't rebuild it.
+RUN touch -a -m ./src/main.rs
+
 RUN cargo build --release
 
 # Create a new minimal image
-FROM debian:buster-slim
+FROM debian:bullseye-slim
+
+#RUN apt-get update & apt-get install -y extra-runtime-dependencies openssl & rm -rf /var/lib/apt/lists/*
 ARG APP=/usr/src/app
 ENV APP_USER=appuser
 
@@ -23,7 +33,7 @@ RUN groupadd $APP_USER \
     && useradd -g $APP_USER $APP_USER \
     && mkdir -p ${APP}
 
-COPY --from=builder /rust-url-shortener/target/release/rust-url-shortener ${APP}/rust-url-shortener
+COPY --from=builder /app/target/release/rust-url-shortener ${APP}/rust-url-shortener
 
 RUN chown -R $APP_USER:$APP_USER ${APP}
 

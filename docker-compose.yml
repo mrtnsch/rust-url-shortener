@@ -21,5 +21,7 @@ services:
       HOST: 0.0.0.0
       PORT: 8080
       SERVER: 0.0.0.0:8080
+      DATABASE_URL: "postgresql://postgres:mysecretpassword@postgres:5432/postgres"
+      RUST_LOG: "Debug"
     ports:
       - "8080:8080"
