@@ -24,4 +24,4 @@ services:
       DATABASE_URL: "postgresql://postgres:mysecretpassword@postgres:5432/postgres"
       RUST_LOG: "Debug"
     ports:
-      - "8080:8080"
+      - "8081:8080"
