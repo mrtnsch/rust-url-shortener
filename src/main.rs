@@ -24,13 +24,12 @@ struct UrlInfoBody {
 
 #[post("/shorten")]
 async fn shorten_url(body: web::Form<UrlInfoBody>, app_state: web::Data<AppState>) -> impl Responder {
-    let server = &app_state.server;
 
     let shortened_url = generate_short_text();
     let mut url_map = app_state.url_map.lock().unwrap();
     url_map.insert(shortened_url.to_string(), body.original_url.to_owned());
 
-    let response_body = format!("Your shortened URL is: http://{}/{}", server, shortened_url);
+    let response_body = format!("Your shortened URL is: http://{}/{}", &app_state.server, shortened_url);
     HttpResponse::Ok().body(response_body)
 }
 
