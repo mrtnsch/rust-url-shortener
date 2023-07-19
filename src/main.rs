@@ -1,9 +1,6 @@
-use std::collections::HashMap;
-use std::sync::Mutex;
 use actix_web::{get, post, web, App, HttpResponse, HttpServer, Responder};
 use actix_web::middleware::Logger;
-use serde::Deserialize;
-use uuid::Uuid;
+
 use dotenv::dotenv;
 use std::env;
 
@@ -11,20 +8,6 @@ use std::env;
 #[get("/")]
 async fn hello() -> impl Responder {
     HttpResponse::Ok().body("Hello world!")
-}
-
-#[derive(Deserialize)]
-struct UrlInfoBody {
-    original_url: String,
-}
-
-#[post("/shorten")]
-async fn shorten_url(body: web::Form<UrlInfoBody>, app_state: web::Data<AppState>) -> impl Responder {
-
-    let shortened_url: String = Uuid::new_v4().to_string().chars().take(8).collect();
-
-    let response_body = format!("Your shortened URL is: http://{}/{}", &app_state.server, shortened_url);
-    HttpResponse::Ok().body(response_body)
 }
 
 struct AppState {
@@ -54,7 +37,6 @@ async fn main() -> std::io::Result<()> {
         //move is used so closure takes ownership of app_state
         App::new()
             .service(hello)
-            .service(shorten_url)
             .app_data(app_state.clone())
             .wrap(Logger::default())
     })
