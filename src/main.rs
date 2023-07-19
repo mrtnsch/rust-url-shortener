@@ -33,17 +33,7 @@ async fn shorten_url(body: web::Form<UrlInfoBody>, app_state: web::Data<AppState
 
 #[get("/{shorturl}")]
 async fn resolve_shortened_url(short_url: web::Path<String>, app_state: web::Data<AppState>) -> impl Responder {
-
-    let url_map = app_state.url_map.lock().unwrap();
-    let result = url_map.get(&short_url.clone());
-
-    match result {
-        Some(target_url) => HttpResponse::TemporaryRedirect()
-            .insert_header(("Location", target_url.to_string()))
-            .finish(),
-        None => HttpResponse::NotFound().body("URL not found"),
-    }
-
+    todo!()
 }
 
 struct AppState {
