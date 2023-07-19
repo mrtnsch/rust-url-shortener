@@ -33,6 +33,7 @@ impl MigrationTrait for Migration {
                         ColumnDef::new(UrlStore::ShortUrl)
                             .string()
                             .not_null()
+                            .unique_key()
                     )
                     .col(ColumnDef::new(UrlStore::TargetUrl).string().not_null())
                     .col(ColumnDef::new(UrlStore::CreatedAt).timestamp().not_null().default(SimpleExpr::Keyword(Keyword::CurrentTimestamp)))
