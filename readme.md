@@ -59,7 +59,9 @@ async fn shorten_url(params: web::Query<UrlParameters>) -> impl Responder {
 * Run server, verify the migration was run
 
 ### Generating the entities
-
+* Make sure that the previous migration has run
+* Create the entities from the schema using the sea orm cli
+* `sea-orm-cli generate entity -o entity/src`
 
 * replace in-memory map with migrations
 
