@@ -22,22 +22,12 @@ struct UrlInfoBody {
 async fn shorten_url(body: web::Form<UrlInfoBody>, app_state: web::Data<AppState>) -> impl Responder {
 
     let shortened_url: String = Uuid::new_v4().to_string().chars().take(8).collect();
-    let target_url = &body.original_url;
-
-    let mut url_map = app_state.url_map.lock().unwrap();
-    url_map.insert(shortened_url.to_string(), body.original_url.to_owned());
 
     let response_body = format!("Your shortened URL is: http://{}/{}", &app_state.server, shortened_url);
     HttpResponse::Ok().body(response_body)
 }
 
-#[get("/{shorturl}")]
-async fn resolve_shortened_url(short_url: web::Path<String>, app_state: web::Data<AppState>) -> impl Responder {
-    todo!()
-}
-
 struct AppState {
-    url_map: Mutex<HashMap<String, String>>,
     server: String
 }
 
@@ -53,7 +43,6 @@ async fn main() -> std::io::Result<()> {
 
     //set up app state
     let app_state = web::Data::new(AppState {
-        url_map: Mutex::new(HashMap::new()),
         server
     });
 
@@ -66,7 +55,6 @@ async fn main() -> std::io::Result<()> {
         App::new()
             .service(hello)
             .service(shorten_url)
-            .service(resolve_shortened_url)
             .app_data(app_state.clone())
             .wrap(Logger::default())
     })
