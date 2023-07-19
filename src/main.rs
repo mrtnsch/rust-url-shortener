@@ -7,9 +7,11 @@ use uuid::Uuid;
 use dotenv::dotenv;
 use std::env;
 use std::time::Duration;
-use sea_orm::{ConnectOptions, Database, DatabaseConnection};
+use sea_orm::{ActiveModelTrait, ConnectOptions, Database, DatabaseConnection};
 use migration::{Migrator, MigratorTrait};
 
+use entity::url_store;
+use sea_orm::ActiveValue::Set;
 
 
 #[get("/")]
@@ -25,7 +27,17 @@ struct UrlInfoBody {
 #[post("/shorten")]
 async fn shorten_url(body: web::Form<UrlInfoBody>, app_state: web::Data<AppState>) -> impl Responder {
 
-    let shortened_url = generate_short_text();
+    let shortened_url: String = Uuid::new_v4().to_string().chars().take(8).collect();
+    let target_url = &body.original_url;
+
+    let url_entry = url_store::ActiveModel {
+        target_url: Set(target_url.clone()),
+        short_url: Set(shortened_url.clone()),
+        ..Default::default()
+    };
+
+    let _url_entry = url_entry.insert(&app_state.db).await;
+
     let mut url_map = app_state.url_map.lock().unwrap();
     url_map.insert(shortened_url.to_string(), body.original_url.to_owned());
 
@@ -47,10 +59,6 @@ async fn resolve_shortened_url(short_url: web::Path<String>, app_state: web::Dat
 
 }
 
-fn generate_short_text() -> String {
-    Uuid::new_v4().to_string().chars().take(8).collect()
-}
-
 struct AppState {
     url_map: Mutex<HashMap<String, String>>,
     server: String,
@@ -64,6 +72,7 @@ async fn main() -> std::io::Result<()> {
     dotenv().ok();
     let host = env::var("HOST").expect("Host has to be defined in env variables");
     let port = env::var("PORT").expect("Port has to be defined in env variables");
+    let server = env::var("SERVER").expect("Server has to be defined in env variables");
     let db_connection_string = env::var("DATABASE_URL").expect("Database URL has to be defined in env variables");
 
 
@@ -86,8 +95,8 @@ async fn main() -> std::io::Result<()> {
     //set up app state
     let app_state = web::Data::new(AppState {
         url_map: Mutex::new(HashMap::new()),
-        server: env::var("SERVER").expect("Server has to be defined in env variables"),
-        db: db
+        server,
+        db
     });
 
     //activate logging
