@@ -8,6 +8,8 @@ use dotenv::dotenv;
 use std::env;
 use std::time::Duration;
 use sea_orm::{ConnectOptions, Database, DatabaseConnection};
+use migration::{Migrator, MigratorTrait};
+
 
 
 #[get("/")]
@@ -79,7 +81,10 @@ async fn main() -> std::io::Result<()> {
         .set_schema_search_path("public".into());
     let db = Database::connect(database_connection_options).await.expect("unable to connect to the database");
 
-    //set up app sate
+    //run migrations
+    Migrator::up(&db, None).await.expect("An error occurred while running the migrations");
+
+    //set up app state
     let app_state = web::Data::new(AppState {
         url_map: Mutex::new(HashMap::new()),
         server: env::var("SERVER").expect("Server has to be defined in env variables"),

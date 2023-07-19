@@ -52,6 +52,8 @@ async fn shorten_url(params: web::Query<UrlParameters>) -> impl Responder {
 * generate migrations
 `cargo install sea-orm-cli`
 `sea-orm-cli migrate init`
+* Reorganize tomls as described in https://www.sea-ql.org/SeaORM/docs/migration/setting-up-migration/
+* 
 
 * replace in-memory map with migrations
 
