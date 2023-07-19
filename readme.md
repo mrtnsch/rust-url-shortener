@@ -136,6 +136,26 @@ async fn up(&self, manager: &SchemaManager) -> Result<(), DbErr> {
     }
 ```
 * Furthermore, you can delete the unnecessary migration which was created by using the CLI
+  * As additional preparation, we create an entity crate which will hold our entities.
+    * You can run `cargo new entity --lib` to do so
+    * Next, add sea-orm to the dependencies of the `entity/Cargo.toml`
+    ```
+      [dependencies]
+      sea-orm = { version = "^0" }
+    ```
+    * Additionally, we need some additional setup in our main Cargo.toml. Make sure it contains the following:
+    ```
+    [workspace]
+    members = [".", "entity", "migration"]
+  
+    [dependencies]
+    entity = { path = "entity" }
+    migration = { path = "migration" } # depends on your needs
+  
+    [dependencies.sea-orm]
+    version = "^0"
+    features = [ ... ]
+    ```
 * Next, we need to tell our server how to connect to our database. Furthermore, the migrations should be run on startup. Add the following code to the main function:
 ```rust
 
