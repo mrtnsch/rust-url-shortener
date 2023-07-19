@@ -6,7 +6,8 @@ use serde::Deserialize;
 use uuid::Uuid;
 use dotenv::dotenv;
 use std::env;
-
+use std::time::Duration;
+use sea_orm::{ConnectOptions, Database, DatabaseConnection};
 
 
 #[get("/")]
@@ -51,23 +52,44 @@ fn generate_short_text() -> String {
 
 struct AppState {
     url_map: Mutex<HashMap<String, String>>,
-    server: String
+    server: String,
+    db: DatabaseConnection
 }
 
 
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
+    //read env variables
     dotenv().ok();
     let host = env::var("HOST").expect("Host has to be defined in env variables");
     let port = env::var("PORT").expect("Port has to be defined in env variables");
+    let db_connection_string = env::var("DATABASE_URL").expect("Database URL has to be defined in env variables");
 
+
+    //set up db connection
+    let mut database_connection_options = ConnectOptions::new(db_connection_string);
+    database_connection_options.max_connections(100)
+        .min_connections(5)
+        .connect_timeout(Duration::from_secs(8))
+        .acquire_timeout(Duration::from_secs(8))
+        .idle_timeout(Duration::from_secs(8))
+        .max_lifetime(Duration::from_secs(8))
+        .sqlx_logging(true)
+        .sqlx_logging_level( log::LevelFilter::Info)
+        .set_schema_search_path("public".into());
+    let db = Database::connect(database_connection_options).await.expect("unable to connect to the database");
+
+    //set up app sate
     let app_state = web::Data::new(AppState {
         url_map: Mutex::new(HashMap::new()),
-        server: env::var("SERVER").expect("Server has to be defined in env variables")
+        server: env::var("SERVER").expect("Server has to be defined in env variables"),
+        db: db
     });
 
+    //activate logging
     env_logger::init_from_env(env_logger::Env::new().default_filter_or("Debug"));
 
+    //start actual server
     HttpServer::new(move || {
         //move is used so closure takes ownership of app_state
         App::new()

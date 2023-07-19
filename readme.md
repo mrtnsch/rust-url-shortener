@@ -42,7 +42,16 @@ async fn shorten_url(params: web::Query<UrlParameters>) -> impl Responder {
 * share via app state
 * get route which resolves to original url
 * Now we have a basic url shortener
+
+
+
+
 * introduce persistence in db
-* add seaorm, generate migrations
+* add seaorm
+* `sea-orm = { version = "^0", features = [ <sqlx-postgres>, <runtime-actix-native-tls>, "macros" ] }`
+* generate migrations
+`cargo install sea-orm-cli`
+`sea-orm-cli migrate init`
+
 * replace in-memory map with migrations
 
